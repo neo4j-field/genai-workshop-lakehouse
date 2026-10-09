@@ -15,9 +15,11 @@ by giving the agent three reusable graph **shapes**.
 - **Documents** (`corpus/` → rendered to `sources/pdfs/`) are parsed into a Neo4j
   **document graph**: a containment tree (table of contents) plus Leiden **themes**
   (communities over the documents' cross-references).
-- **Warehouse** rows live in **BigQuery** and are never migrated. **neocarta** reads
-  the warehouse's metadata (the foreign-key join paths) into a Neo4j **connections**
-  graph; the agent writes Text2SQL grounded by those join paths and runs it live.
+- **Warehouse** rows live in **BigQuery** or **Databricks**, picked by `WAREHOUSE`
+  in `.env`, and are never migrated. **neocarta** reads the warehouse's metadata
+  plus a few example values per column into a Neo4j **connections** graph. The
+  metadata includes the foreign-key join paths. The agent writes Text2SQL
+  grounded by those join paths and runs it live.
 - The agent **federates**: ground a question in the document graph, then read the
   warehouse facts with SQL, joining on the identifiers both halves share (part
   numbers, trouble codes).
@@ -29,7 +31,7 @@ by giving the agent three reusable graph **shapes**.
 - `outline.py` — the library as a navigable table of contents (the tree shape)
 - `search.py` — full-text search over sections
 - `themes.py` — Leiden community detection over document cross-references
-- `run_sql.py` — run BigQuery SQL for warehouse facts, grounded by the `connections` MCP
+- `run_sql.py` — run warehouse SQL for warehouse facts, grounded by the `connections` MCP. `--info` names the warehouse and its dialect
 
 ## Common commands
 

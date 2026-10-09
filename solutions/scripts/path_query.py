@@ -2,7 +2,8 @@
 
 Give it two warehouse tables. It walks the connections graph (the foreign-key
 metadata neocarta built) to find the join PATH between them, generates the SQL
-that joins along that path, runs it on BigQuery, and shows the rows.
+that joins along that path, runs it on the warehouse (BigQuery or Databricks,
+per WAREHOUSE in .env), and shows the rows.
 
 This is the connections shape doing its job: it hands over the exact path and
 join keys, so the SQL is correct by construction instead of guessed. The
@@ -18,7 +19,7 @@ import argparse
 from collections import deque
 
 from db import query
-from bq import bq_query, table
+from warehouse import query as warehouse_query, table
 
 
 def fk_edges():
@@ -92,7 +93,7 @@ def main():
 
     print("PATH :", " -> ".join(tables))
     print("\nSQL  :\n" + sql + "\n")
-    rows = bq_query(sql)
+    rows = warehouse_query(sql)
     print(f"RESULT: {len(rows)} rows")
     for r in rows:
         print(" ", {k: v for k, v in r.items()})

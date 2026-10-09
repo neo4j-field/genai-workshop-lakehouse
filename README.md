@@ -12,9 +12,11 @@ The data comes in two halves that share keys (part numbers, trouble codes):
 
 - **Documents** — repair manuals, service bulletins, and recall notices (PDFs),
   parsed into a Neo4j **document graph** (a navigable tree plus Leiden themes).
-- **Warehouse** — vehicles, work orders, and parts in **BigQuery**. The rows stay
-  in BigQuery; **neocarta** reads only their metadata (the foreign-key join paths)
-  into a Neo4j **connections** graph, and the agent federates across the two.
+- **Warehouse** — vehicles, work orders, and parts in **BigQuery** by default, or
+  in **Databricks**. The rows stay in the warehouse. **neocarta** reads their
+  metadata plus a few example values per column into a Neo4j **connections**
+  graph. The metadata includes the foreign-key join paths, and the agent
+  federates across the two halves.
 
 ## Quick start
 
@@ -44,6 +46,13 @@ Then add your credentials to `.env` (the setup script copies it from
 - **BigQuery** — the workshop dataset is read-only; use the one-line
   `BIGQUERY_SA_KEY_B64` from the workshop, or use your own `gcloud` login. To
   provision your own copy of the warehouse, see [`bigquery/`](bigquery/).
+- **Databricks** — to use Databricks instead of BigQuery, set
+  `WAREHOUSE=databricks` and fill in `DATABRICKS_SERVER_HOSTNAME`,
+  `DATABRICKS_HTTP_PATH`, and `DATABRICKS_TOKEN`. Your instructor provides these
+  values, including a read-only token. Never commit the token. Keep
+  `GCP_PROJECT_ID` set, because `load/build_connections.py` reads it on start.
+  To provision the warehouse yourself, see
+  [`databricks/`](databricks/README.md#the-connections-path-warehousedatabricks).
 - **Anthropic** — set `ANTHROPIC_API_KEY`, or leave it blank to use your Claude
   Code subscription.
 
@@ -80,13 +89,13 @@ Start your coding agent in the repo root — `skill/SKILL.md` is its playbook.
 |---|---|
 | `corpus/` | The document half as authored markdown (`<area>/<id>.md`), the source of truth |
 | `sources/pdfs/` | The corpus rendered to PDFs (manuals, bulletins, recalls) — what the loader parses |
-| `sources/warehouse/` | CSV exports of the BigQuery tables `autofix.service.*` |
+| `sources/warehouse/` | CSV exports of the warehouse tables `autofix.service.*`, which load both BigQuery and Databricks |
 | `load/` | The pipelines: `build_connections.py` (warehouse metadata graph) and `load_documents.py` (document graph) |
 | `skill/` | **What you build** — the service-advisor skill: `SKILL.md` playbook + `scripts/` tools |
 | `solutions/` | Complete scripts — catch up or compare |
 | `docs/` | The shape specs (`outline-format.md`, `theme-format.md`) you build against |
 | `bigquery/` | Provision your own copy of the AutoFix warehouse in BigQuery |
-| `databricks/` | Optional: stand the same data up on Databricks (Genie + AI Search) |
+| `databricks/` | Provision the AutoFix warehouse in Databricks, plus an optional Genie + AI Search path |
 | `tools/` | Authoring tools: `render_corpus.py` (markdown → PDFs), `generate_warehouse.py` (warehouse CSVs) |
 
 ## Running it locally

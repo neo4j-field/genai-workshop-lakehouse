@@ -8,6 +8,11 @@ folder is an **optional alternative**: it stands the same AutoFix data up on
 Use it if you would rather run the AutoFix data on Databricks, or to see how the
 pattern ports to another lakehouse.
 
+This folder also provisions the warehouse for the main workshop path on
+Databricks, `WAREHOUSE=databricks`. There, neocarta builds the connections graph
+from Unity Catalog. See
+[The connections path](#the-connections-path-warehousedatabricks).
+
 ---
 
 ## Prereqs
@@ -29,8 +34,9 @@ pattern ports to another lakehouse.
   (Public Preview); and a **Genie space** for the table tool. A served chat model
   for Genie/agents (e.g. `databricks-claude-sonnet-4-5`).
 
-> If `DATABRICKS_CATALOG` isn't in `.env`, the scripts default to `autofix`; prepend
-> it inline, e.g. `DATABRICKS_CATALOG=lakehouse-workshop python databricks/load_databricks.py`.
+> If `DATABRICKS_CATALOG` isn't in `.env`, the scripts default to `lakehouse-workshop`.
+> To use another catalog, prepend it inline, for example
+> `DATABRICKS_CATALOG=my-catalog python databricks/load_databricks.py`.
 
 ---
 
@@ -44,6 +50,46 @@ smoke test if you want to confirm credentials first.)
 | 1 | `python databricks/load_databricks.py` | 6 Delta tables in `{catalog}.{schema}` with PK/FK constraints (idempotent). |
 | 2 | `python databricks/upload_pdfs.py` | UC Volume `{catalog}.{schema}.pdfs` + the AutoFix PDFs uploaded. |
 | 3 | `python databricks/build_doc_index.py` | `ai_parse_document` → `doc_chunks` (CDF) → **AI Search endpoint + Delta Sync index** (embeds via `databricks-gte-large-en`). **Provisions infra, ~10-20 min, billed.** |
+
+---
+
+## The connections path (WAREHOUSE=databricks)
+
+The main workshop path needs only the warehouse tables from Part A, step 1.
+Learners run `load/build_connections.py` with `WAREHOUSE=databricks`, and the
+agent queries the rows with `run_sql.py`. Parts B and C are not needed.
+
+The instructor sets up one shared warehouse and hands out read-only access:
+
+1. Create the catalog if it does not exist. Then run
+   `python databricks/load_databricks.py` as an admin. The loader creates the
+   schema and tables but not the catalog.
+2. If the schema already existed, set the schema and table comments.
+   `CREATE ... IF NOT EXISTS` does not change an existing comment. Without this
+   step, the schema and three table descriptions differ from BigQuery.
+   ```sql
+   COMMENT ON SCHEMA `lakehouse-workshop`.`autofix_service` IS 'AutoFix Group service warehouse (workshop sample)';
+   COMMENT ON TABLE `lakehouse-workshop`.`autofix_service`.`dtc_codes` IS 'Diagnostic trouble code reference (OBD-II).';
+   COMMENT ON TABLE `lakehouse-workshop`.`autofix_service`.`procedures` IS 'Labor procedures performed on work orders.';
+   COMMENT ON TABLE `lakehouse-workshop`.`autofix_service`.`parts` IS 'Parts catalog; superseded_by points to the replacement part.';
+   ```
+3. Grant the learners' principal read access on the whole schema, not per table:
+   ```sql
+   GRANT USE CATALOG ON CATALOG `lakehouse-workshop` TO `<principal>`;
+   GRANT USE SCHEMA ON SCHEMA `lakehouse-workshop`.`autofix_service` TO `<principal>`;
+   GRANT SELECT ON SCHEMA `lakehouse-workshop`.`autofix_service` TO `<principal>`;
+   ```
+   `BROWSE` alone hides the key constraints, so neocarta builds no join paths. A
+   per-table grant that leaves out a referenced table drops that foreign key
+   with no error. The principal also needs the `databricks-sql-access`
+   entitlement and `CAN_USE` on the SQL warehouse.
+4. Size the SQL warehouse for the class. Concurrency is untested.
+5. Give each learner the host, the HTTP path, and the event's read-only token
+   for `.env`. Make the token short-lived. Never commit it. Revoke it after
+   the workshop.
+
+To check the setup, run `python load/build_connections.py` with the learner
+settings. It should report 6 tables and 5 `REFERENCES`.
 
 ---
 

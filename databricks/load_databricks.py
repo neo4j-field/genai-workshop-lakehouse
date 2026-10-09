@@ -11,7 +11,7 @@ Env (a .env is loaded if present):
   DATABRICKS_SERVER_HOSTNAME   e.g. dbc-xxxx.cloud.databricks.com   (no https://)
   DATABRICKS_HTTP_PATH         e.g. /sql/1.0/warehouses/abc123
   DATABRICKS_TOKEN             a PAT (dapi...) or OAuth token
-  DATABRICKS_CATALOG           default: autofix
+  DATABRICKS_CATALOG           default: lakehouse-workshop
   DATABRICKS_SCHEMA            default: autofix_service
 
 Run:  python databricks/load_databricks.py
@@ -29,8 +29,8 @@ load_dotenv(override=True)
 HOST = os.environ["DATABRICKS_SERVER_HOSTNAME"]
 HTTP_PATH = os.environ["DATABRICKS_HTTP_PATH"]
 TOKEN = os.environ["DATABRICKS_TOKEN"]
-CATALOG = os.environ.get("DATABRICKS_CATALOG", "autofix")
-SCHEMA = os.environ.get("DATABRICKS_SCHEMA", "autofix_service")
+CATALOG = os.environ.get("DATABRICKS_CATALOG") or "lakehouse-workshop"
+SCHEMA = os.environ.get("DATABRICKS_SCHEMA") or "autofix_service"
 FQ = f"`{CATALOG}`.`{SCHEMA}`"  # backticked so hyphenated catalog names work
 
 
@@ -52,19 +52,19 @@ TABLES = {
 
 # DDL — order matters: a table must exist before another FKs to it.
 DDL = [
-    f"CREATE SCHEMA IF NOT EXISTS {FQ}",
+    f"CREATE SCHEMA IF NOT EXISTS {FQ} COMMENT 'AutoFix Group service warehouse (workshop sample)'",
     f"""CREATE TABLE IF NOT EXISTS {FQ}.vehicles (
         vin STRING NOT NULL, make STRING, model STRING, year INT, engine STRING,
         CONSTRAINT pk_vehicles PRIMARY KEY (vin)) COMMENT 'One row per serviced vehicle.'""",
     f"""CREATE TABLE IF NOT EXISTS {FQ}.dtc_codes (
         code STRING NOT NULL, description STRING,
-        CONSTRAINT pk_dtc_codes PRIMARY KEY (code)) COMMENT 'OBD-II diagnostic trouble code reference.'""",
+        CONSTRAINT pk_dtc_codes PRIMARY KEY (code)) COMMENT 'Diagnostic trouble code reference (OBD-II).'""",
     f"""CREATE TABLE IF NOT EXISTS {FQ}.procedures (
         procedure_id STRING NOT NULL, name STRING, labor_hours DOUBLE,
-        CONSTRAINT pk_procedures PRIMARY KEY (procedure_id)) COMMENT 'Labor procedures.'""",
+        CONSTRAINT pk_procedures PRIMARY KEY (procedure_id)) COMMENT 'Labor procedures performed on work orders.'""",
     f"""CREATE TABLE IF NOT EXISTS {FQ}.parts (
         part_number STRING NOT NULL, name STRING, superseded_by STRING,
-        CONSTRAINT pk_parts PRIMARY KEY (part_number)) COMMENT 'Parts catalog; superseded_by points to the replacement.'""",
+        CONSTRAINT pk_parts PRIMARY KEY (part_number)) COMMENT 'Parts catalog; superseded_by points to the replacement part.'""",
     f"""CREATE TABLE IF NOT EXISTS {FQ}.work_orders (
         wo_id STRING NOT NULL, vin STRING, opened DATE, odometer INT, complaint STRING,
         dtc_code STRING, procedure_id STRING, comeback BOOLEAN,

@@ -8,7 +8,7 @@ Reads the rendered PDFs (load/parse_corpus.py) and builds the generic graph:
 
 No domain entities (no Part/DTC, no per-type Document labels, no REFERENCES_*,
 no shared-key derivation). The same loader works on any document estate. The
-finale federates to BigQuery on identifiers that appear in section *text*, found
+finale federates to the warehouse on identifiers that appear in section *text*, found
 by full-text search - not by graph entities.
 
 External link targets (URLs) become stub :Document nodes (metadata only).

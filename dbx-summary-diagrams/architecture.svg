@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="960" height="560" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="960" height="560" fill="#ffffff"/>
+
+  <text x="480" y="30" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">Architecture: two halves, one agent</text>
+
+  <!-- Column labels -->
+  <text x="130" y="62" text-anchor="middle" font-size="13" fill="#64748b">SOURCES</text>
+  <text x="380" y="62" text-anchor="middle" font-size="13" fill="#64748b">LOADERS</text>
+  <text x="620" y="62" text-anchor="middle" font-size="13" fill="#64748b">NEO4J</text>
+  <text x="855" y="62" text-anchor="middle" font-size="13" fill="#64748b">AGENT</text>
+
+  <!-- Documents source -->
+  <rect x="20" y="80" width="220" height="80" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="130" y="112" text-anchor="middle" font-size="15" font-weight="bold" fill="#0f172a">Document library</text>
+  <text x="130" y="134" text-anchor="middle" font-size="13" fill="#334155">PDF manuals, bulletins, recalls</text>
+
+  <!-- Warehouse source -->
+  <rect x="20" y="300" width="220" height="170" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+  <text x="130" y="328" text-anchor="middle" font-size="15" font-weight="bold" fill="#0f172a">Warehouse</text>
+  <text x="130" y="348" text-anchor="middle" font-size="12" fill="#334155">picked by WAREHOUSE in .env</text>
+  <rect x="40" y="362" width="180" height="38" rx="19" fill="#ffffff" stroke="#0284c7"/>
+  <text x="130" y="386" text-anchor="middle" font-size="14" fill="#0f172a">BigQuery (default)</text>
+  <rect x="40" y="410" width="180" height="38" rx="19" fill="#ffffff" stroke="#dc2626"/>
+  <text x="130" y="434" text-anchor="middle" font-size="14" fill="#0f172a">Databricks (new)</text>
+
+  <!-- Loaders -->
+  <rect x="290" y="90" width="180" height="60" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+  <text x="380" y="118" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">load_documents.py</text>
+  <text x="380" y="138" text-anchor="middle" font-size="12" fill="#334155">parse the PDFs</text>
+
+  <rect x="290" y="355" width="180" height="70" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+  <text x="380" y="382" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">build_connections.py</text>
+  <text x="380" y="402" text-anchor="middle" font-size="12" fill="#334155">neocarta connector</text>
+  <text x="380" y="417" text-anchor="middle" font-size="12" fill="#334155">for the chosen warehouse</text>
+
+  <!-- Neo4j -->
+  <rect x="520" y="75" width="200" height="300" rx="12" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+  <rect x="535" y="95" width="170" height="100" rx="8" fill="#ffffff" stroke="#059669"/>
+  <text x="620" y="125" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">Document graph</text>
+  <text x="620" y="147" text-anchor="middle" font-size="12" fill="#334155">table of contents tree</text>
+  <text x="620" y="165" text-anchor="middle" font-size="12" fill="#334155">plus Leiden themes</text>
+  <rect x="535" y="225" width="170" height="130" rx="8" fill="#ffffff" stroke="#059669"/>
+  <text x="620" y="255" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">Connections graph</text>
+  <text x="620" y="277" text-anchor="middle" font-size="12" fill="#334155">tables and columns</text>
+  <text x="620" y="295" text-anchor="middle" font-size="12" fill="#334155">join paths</text>
+  <text x="620" y="313" text-anchor="middle" font-size="12" fill="#334155">a few example values</text>
+  <text x="620" y="335" text-anchor="middle" font-size="12" fill="#334155">no rows</text>
+
+  <!-- Agent -->
+  <rect x="770" y="150" width="170" height="130" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="855" y="190" text-anchor="middle" font-size="15" font-weight="bold" fill="#0f172a">Claude Code</text>
+  <text x="855" y="212" text-anchor="middle" font-size="13" fill="#334155">with SKILL.md</text>
+  <text x="855" y="240" text-anchor="middle" font-size="12" fill="#334155">answers questions</text>
+  <text x="855" y="258" text-anchor="middle" font-size="12" fill="#334155">from both halves</text>
+
+  <!-- Load arrows -->
+  <line x1="240" y1="120" x2="286" y2="120" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="470" y1="120" x2="531" y2="140" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="240" y1="390" x2="286" y2="390" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="265" y="410" text-anchor="middle" font-size="11" fill="#64748b">metadata</text>
+  <line x1="470" y1="385" x2="531" y2="310" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Agent reads Neo4j -->
+  <line x1="766" y1="180" x2="709" y2="150" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="728" y="128" font-size="11" fill="#7c3aed">outline,</text>
+  <text x="728" y="141" font-size="11" fill="#7c3aed">search, themes</text>
+  <line x1="766" y1="255" x2="709" y2="285" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="728" y="305" font-size="11" fill="#7c3aed">connections</text>
+  <text x="728" y="318" font-size="11" fill="#7c3aed">MCP</text>
+
+  <!-- Agent runs live SQL -->
+  <path d="M855,280 L855,515 L130,515 L130,474" fill="none" stroke="#dc2626" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="330" y="500" width="300" height="30" rx="6" fill="#ffffff"/>
+  <text x="480" y="520" text-anchor="middle" font-size="13" fill="#dc2626" font-weight="bold">live SQL: run_sql.py, then warehouse.py</text>
+  <text x="480" y="548" text-anchor="middle" font-size="12" fill="#64748b">The rows stay in the warehouse. Only the answers come back.</text>
+</svg>
