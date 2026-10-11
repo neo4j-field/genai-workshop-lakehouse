@@ -65,7 +65,7 @@ Open `.env` and set these values:
 - **`DATABRICKS_PROFILE`:** The name of your Databricks CLI profile. Run `databricks auth profiles` to list them.
 - **`DATABRICKS_SERVER_HOSTNAME`:** The workspace host, for example `dbc-xxxx.cloud.databricks.com`. Write it without `https://`.
 - **`DATABRICKS_HTTP_PATH`:** Set it to `/sql/1.0/warehouses/<warehouse-id>`. Run `databricks warehouses list --profile <your-profile>` to find the warehouse ID.
-- **`DATABRICKS_CATALOG` and `DATABRICKS_SCHEMA`:** Leave the defaults, `lakehouse-workshop` and `autofix_service`. If you change them, use your names in every SQL block below.
+- **`DATABRICKS_CATALOG` and `DATABRICKS_SCHEMA`:** The defaults are `lakehouse-workshop` and `autofix_service`. Set other names here, for example `lakehouse-workshop-test`. Every command below reads these two variables, so you change nothing else.
 - **Blank values:** Leave `DATABRICKS_TOKEN`, `DATABRICKS_SP_APP_ID`, `DATABRICKS_SP_ID`, and `DATABRICKS_TOKEN_ID` empty. Later steps fill them in.
 
 Then copy every `.env` value into your shell:
@@ -82,15 +82,32 @@ Optional: `test_connection.ipynb` is a quick notebook that checks your `.env` co
 ## Step 3: Create the catalog
 
 The loader creates the schema and tables. It does not create the catalog.
-Run this in the Databricks SQL editor:
+This command creates the catalog named in `DATABRICKS_CATALOG` and runs on your SQL warehouse:
 
-```sql
-CREATE CATALOG IF NOT EXISTS `lakehouse-workshop`;
+```bash
+databricks experimental aitools tools query "CREATE CATALOG IF NOT EXISTS \`$DATABRICKS_CATALOG\`" \
+  --profile "$DATABRICKS_PROFILE" --warehouse "${DATABRICKS_HTTP_PATH##*/}"
 ```
+
+- **Safe to repeat:** `IF NOT EXISTS` skips a catalog that exists.
+- **Warehouse ID:** `${DATABRICKS_HTTP_PATH##*/}` is the last part of your HTTP path.
 
 ## Step 4: Load the six tables
 
-Put your own login token in `.env`. It lasts about one hour. Then run the loader.
+**Optional: start from scratch.** Do this when the schema exists from an earlier run.
+The loader never changes the comment on an existing schema or table, so an old
+schema keeps its old comments. Drop the schema first:
+
+```bash
+databricks experimental aitools tools query "DROP SCHEMA IF EXISTS \`$DATABRICKS_CATALOG\`.\`$DATABRICKS_SCHEMA\` CASCADE" \
+  --profile "$DATABRICKS_PROFILE" --warehouse "${DATABRICKS_HTTP_PATH##*/}"
+```
+
+- **What it deletes:** Every table in the schema. It also deletes the Volume and index tables from Part 2.
+- **Grants:** They go with the schema. Run Step 5 again after the load to restore them.
+- **Fresh workspace:** Skip this. `IF EXISTS` makes the command safe, but there is nothing to drop.
+
+Then put your own login token in `.env`. It lasts about one hour. Run the loader.
 
 ```bash
 databricks auth token --profile "$DATABRICKS_PROFILE" -o json | jq -r .access_token \
@@ -103,18 +120,6 @@ python databricks/load_databricks.py
 - **What the loader does:** It runs `schema.sql` with your catalog and schema names filled in. Then it loads the rows from `sources/warehouse/*.csv`.
 - **What it creates:** The schema and six Delta tables in `{catalog}.{schema}`. The primary and foreign keys become the join paths in the connections graph.
 - **Safe to repeat:** Running it again resets the rows.
-
-Start from scratch if the schema exists from an earlier run. The loader never
-changes the comment on an existing schema or table, so an old schema keeps its
-old comments. Drop the schema first, in the SQL editor:
-
-```sql
-DROP SCHEMA `lakehouse-workshop`.`autofix_service` CASCADE;
-```
-
-This deletes every table in the schema. It also deletes the Volume and index
-tables from Part 2. The grants go with the schema. Run Step 4 again, then Step 5
-to restore the grants.
 
 ## Step 5: Create the read-only access
 
@@ -158,15 +163,15 @@ Size the SQL warehouse for the class. Nobody has tested many learners on one war
 python load/build_connections.py
 python skill/scripts/run_sql.py --info
 python skill/scripts/run_sql.py "SELECT count(DISTINCT w.wo_id) AS work_orders, count_if(w.comeback) AS comebacks
-  FROM \`lakehouse-workshop\`.\`autofix_service\`.\`work_orders\` w
-  JOIN \`lakehouse-workshop\`.\`autofix_service\`.\`vehicles\` v ON w.vin = v.vin
+  FROM \`$DATABRICKS_CATALOG\`.\`$DATABRICKS_SCHEMA\`.\`work_orders\` w
+  JOIN \`$DATABRICKS_CATALOG\`.\`$DATABRICKS_SCHEMA\`.\`vehicles\` v ON w.vin = v.vin
   WHERE v.model = 'Falcon' AND v.engine = '2.0T' AND w.dtc_code = 'P0301'"
 ```
 
 Expect these results:
 
 - **Build:** `Connections graph ready: 6 tables, 5 REFERENCES (join paths).` Fewer than 5 means a grant is missing. Run Step 5 again.
-- **Info:** `warehouse: databricks`, and the table form `` `lakehouse-workshop`.`autofix_service`.`<table>` ``.
+- **Info:** `warehouse: databricks`, and the table form `` `<catalog>`.`<schema>`.`<table>` `` with your catalog and schema names.
 - **Counts:** 29 work orders and 6 comebacks. BigQuery gives the same numbers.
 
 `build_connections.py` writes to the Neo4j instance in `.env`. Build only one warehouse into each Neo4j instance, because the path tool reads join paths from every database.
@@ -189,8 +194,53 @@ DATABRICKS_TOKEN=<token>
 ```
 
 - **Keep `GCP_PROJECT_ID`:** Learners leave it set in `.env`. `build_connections.py` reads it on start, even on Databricks.
-- **Catalog and schema:** `.env.example` already sets both to the workshop defaults.
+- **Catalog and schema:** `.env.example` already sets both to the workshop defaults. If you use other names, add `DATABRICKS_CATALOG` and `DATABRICKS_SCHEMA` to the values you hand out.
 - **Query tag:** Every learner query carries the tag `neo4j-genai-workshop-lakehouse`. Search for it in the warehouse query history.
+
+### Optional: test the hand-out as a learner
+
+Step 6 ran with your `.env`, which holds instructor-only values. This test runs the
+same checks from a fresh checkout that has only the values a learner receives. If it
+passes, a learner has everything they need.
+
+1. Make a fresh checkout in a new folder:
+
+   ```bash
+   git clone <repo-url> autofix-learner-test
+   cd autofix-learner-test
+   cp .env.example .env
+   ```
+
+2. Copy these values from your `.env` into the new `.env`:
+
+   - `WAREHOUSE=databricks`
+   - `NEO4J_URI`
+   - `NEO4J_USERNAME`
+   - `NEO4J_PASSWORD`
+   - `NEO4J_DATABASE`
+   - `DATABRICKS_SERVER_HOSTNAME`
+   - `DATABRICKS_HTTP_PATH`
+   - `DATABRICKS_TOKEN`
+   - `DATABRICKS_CATALOG` and `DATABRICKS_SCHEMA`, only if you use names other than the defaults
+
+   Leave `GCP_PROJECT_ID` as `.env.example` sets it. Leave `DATABRICKS_PROFILE`, `DATABRICKS_SP_APP_ID`, `DATABRICKS_SP_ID`, and `DATABRICKS_TOKEN_ID` blank. Learners do not receive them.
+
+3. Set up the environment and run the checks:
+
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   set -a; source .env; set +a
+
+   python load/build_connections.py
+   python skill/scripts/run_sql.py --info
+   python skill/scripts/run_sql.py "SELECT count(*) AS vehicles FROM \`$DATABRICKS_CATALOG\`.\`$DATABRICKS_SCHEMA\`.\`vehicles\`"
+   ```
+
+- **Expected results:** The same as Step 6. The build prints `6 tables, 5 REFERENCES`. The info command prints `warehouse: databricks`. The count prints a number above 0.
+- **Failure:** A missing value in the hand-out shows here as an error. Add the value to the hand-out and run the test again.
+- **Cleanup:** Delete the `autofix-learner-test` folder when you finish. Its `.env` holds the learners' token.
 
 ## Step 8: Revoke the token after the workshop
 
@@ -208,6 +258,16 @@ set -a; source .env; set +a
 ---
 
 # Part 2: Optional Genie and AI Search
+
+## Overview
+
+- **Purpose:** Part 2 builds the comparison case for the workshop's main idea, that context comes in shapes, not queries. It sets up a Databricks-native agent that has no graph shape. **AI Search** finds document passages by similarity. **Genie** answers questions over the six tables.
+- **Who uses it:** Only an instructor or demo author runs Part 2. Learners never run it. No workshop module and no skill script reads the AI Search index or the Genie space.
+- **What it shows:** The comparison gives two results, listed below.
+- **Similarity retrieval only samples the corpus:** A similarity search returns the passages closest to the question. The agent sees a slice of the library, and the agent itself flags the coverage gaps in what it found.
+- **The graph covered and clustered all 112 docs:** The document graph gives the agent a table of contents and Leiden themes. For a question such as "common patterns across our bulletins and recalls", the graph covers and groups every document.
+- **A lack-of-shape effect:** The difference comes from the missing shape. Any similarity-only retriever returns top matches and cannot show the whole library.
+- **Vendor-neutral:** The comparison is not a criticism of Databricks. AI Search and Genie do their jobs well. A question about the whole library needs a map of the library, and a search box does not provide one.
 
 Skip this part unless you want a coding agent to use Databricks managed MCP. The
 agent then asks Genie about the tables and AI Search about the PDFs.
@@ -240,22 +300,22 @@ python databricks/build_doc_index.py
 
 The agent reaches both tools at `/api/2.0/mcp/...`.
 
-- **AI Search MCP:** Ready once the index is live. The URL is `https://<host>/api/2.0/mcp/ai-search/lakehouse-workshop/autofix_service/doc_chunks_idx`.
+- **AI Search MCP:** Ready once the index is live. The URL is `https://<host>/api/2.0/mcp/ai-search/<catalog>/<schema>/doc_chunks_idx`, with your catalog and schema names.
 - **Genie space MCP:** Create a Genie space in the Databricks UI. Limit it to the six tables: `vehicles`, `work_orders`, `work_order_parts`, `parts`, `procedures`, `dtc_codes`. Copy its `space_id`. The URL is `https://<host>/api/2.0/mcp/genie/<space_id>`.
 - **Managed MCP switch:** Ask a workspace admin to confirm it is enabled.
 
 ## Step 12: Connect the tools to the coding agent
 
 These commands save the token in your user settings, so it never lands in the repo.
-Replace `<host>`, `<space_id>`, and `<PAT>`.
+The URL reads your host, catalog, and schema from `.env`. Replace `<space_id>` and `<PAT>`.
 
 ```bash
 claude mcp add --transport http databricks-aisearch \
-  https://<host>/api/2.0/mcp/ai-search/lakehouse-workshop/autofix_service/doc_chunks_idx \
+  "https://$DATABRICKS_SERVER_HOSTNAME/api/2.0/mcp/ai-search/$DATABRICKS_CATALOG/$DATABRICKS_SCHEMA/doc_chunks_idx" \
   --header "Authorization: Bearer <PAT>"
 
 claude mcp add --transport http databricks-genie \
-  https://<host>/api/2.0/mcp/genie/<space_id> \
+  "https://$DATABRICKS_SERVER_HOSTNAME/api/2.0/mcp/genie/<space_id>" \
   --header "Authorization: Bearer <PAT>"
 ```
 
@@ -271,15 +331,25 @@ the simplest way to start. OAuth is the preferred managed-MCP login.
 The AI Search endpoint bills while it runs. Delete it when you finish Part 2:
 
 ```python
+import os
+
 from databricks.vector_search.client import VectorSearchClient
-vsc = VectorSearchClient(workspace_url="https://<host>", personal_access_token="<token>", disable_notice=True)
-vsc.delete_index(endpoint_name="autofix-search", index_name="lakehouse-workshop.autofix_service.doc_chunks_idx")
+
+vsc = VectorSearchClient(
+    workspace_url=f"https://{os.environ['DATABRICKS_SERVER_HOSTNAME']}",
+    personal_access_token=os.environ["DATABRICKS_TOKEN"],
+    disable_notice=True,
+)
+index = f"{os.environ['DATABRICKS_CATALOG']}.{os.environ['DATABRICKS_SCHEMA']}.doc_chunks_idx"
+vsc.delete_index(endpoint_name="autofix-search", index_name=index)
 vsc.delete_endpoint("autofix-search")
 ```
 
+Run it with your login token in `.env`, as in Step 4.
+
 ## Remove everything
 
-- **Drop the schema:** Run `` DROP SCHEMA `lakehouse-workshop`.`autofix_service` CASCADE `` in the SQL editor. It drops the tables, the Volume, and the parsed and chunk tables.
+- **Drop the schema:** Run the `DROP SCHEMA` command from Step 4. It drops the tables, the Volume, and the parsed and chunk tables.
 - **Remove the MCP servers:** Run `claude mcp remove databricks-aisearch databricks-genie`.
 - **Revoke the learners' token:** Follow Step 8.
 

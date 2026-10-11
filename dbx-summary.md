@@ -113,8 +113,8 @@ Expect `Connections graph ready: 6 tables, 5 REFERENCES (join paths).` Fewer tha
 ```bash
 python skill/scripts/run_sql.py --info
 python skill/scripts/run_sql.py "SELECT count(DISTINCT w.wo_id) AS work_orders, count_if(w.comeback) AS comebacks
-  FROM \`lakehouse-workshop\`.\`autofix_service\`.\`work_orders\` w
-  JOIN \`lakehouse-workshop\`.\`autofix_service\`.\`vehicles\` v ON w.vin = v.vin
+  FROM \`$DATABRICKS_CATALOG\`.\`$DATABRICKS_SCHEMA\`.\`work_orders\` w
+  JOIN \`$DATABRICKS_CATALOG\`.\`$DATABRICKS_SCHEMA\`.\`vehicles\` v ON w.vin = v.vin
   WHERE v.model = 'Falcon' AND v.engine = '2.0T' AND w.dtc_code = 'P0301'"
 python solutions/scripts/path_query.py parts vehicles \
   --where "parts.part_number = 'IC-2042-B'" \
@@ -123,7 +123,7 @@ python solutions/scripts/path_query.py parts vehicles \
 
 Expect these results:
 
-- **Info:** The first command prints `warehouse: databricks` and the table form `` `lakehouse-workshop`.`autofix_service`.`<table>` ``.
+- **Info:** The first command prints `warehouse: databricks` and the table form `` `<catalog>`.`<schema>`.`<table>` `` with your catalog and schema names.
 - **Counts:** The second prints 29 work orders and 6 comebacks. BigQuery gives the same numbers.
 - **Path:** The third prints the same path as on BigQuery and 20 rows.
 

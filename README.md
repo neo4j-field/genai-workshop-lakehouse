@@ -56,32 +56,99 @@ Then add your credentials to `.env` (the setup script copies it from
 - **Anthropic** — set `ANTHROPIC_API_KEY`, or leave it blank to use your Claude
   Code subscription.
 
+## Set up your coding agent
+
+The workshop uses Claude Code as the coding agent. It needs three things:
+
+- **Claude Code:** The agent itself.
+- **The `connections` MCP server:** It lets the agent read the warehouse map from Neo4j. The repo defines it in `.mcp.json`, and `run-mcp.sh` starts it.
+- **The skill:** `skill/SKILL.md` is the agent's playbook. It is already in the repo.
+
+### In a Codespace
+
+The setup runs for you. `.devcontainer/post-create.sh` does this when the Codespace starts:
+
+- **Claude Code:** It installs Claude Code.
+- **Python packages:** It installs `requirements.txt`. This includes `neocarta-mcp`, the program behind the `connections` server.
+- **Neo4j CLI and skills:** It installs `neo4j-cli`, `neo4j-cypher-skill`, and `neo4j-gds-skill`. The agent uses them in steps 3 and 4 of the workshop flow.
+- **Environment file:** It copies `.env.example` to `.env`. It also loads `.env` into every new terminal.
+
+You add your Neo4j values to `.env`, run step 1 of the workshop flow, and start the agent with `claude` in a second terminal. Approve the `connections` server when Claude Code asks.
+
+### On your laptop
+
+The setup script does not install Claude Code on a laptop, so you do these steps yourself:
+
+1. **Install Claude Code:**
+   ```bash
+   npm install -g @anthropic-ai/claude-code
+   ```
+2. **Run the setup script** from the Quick start above, if you have not already. It makes `.venv`, installs `requirements.txt` with `neocarta-mcp`, installs the Neo4j CLI and its skills, and creates `.env`.
+3. **Fill in `.env`.** Add `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, and `NEO4J_DATABASE`. The `connections` server reads them from this file.
+4. **Build the connections graph.** Run step 1 of the workshop flow below. The server has nothing to serve until this graph exists.
+5. **Start the agent** from the repo root:
+   ```bash
+   claude
+   ```
+6. **Approve the `connections` server.** Claude Code asks the first time it sees `.mcp.json`. Run `/mcp` to check. `connections` should show as connected.
+7. **Fix a failed connection.** If `/mcp` shows `connections` as failed, check the Neo4j values in `.env`. Then reconnect from the `/mcp` menu.
+
 ## The workshop flow
 
-The GraphAcademy course walks through each step; here are the commands per module.
+The workshop has five steps. The GraphAcademy course walks through each one. Here is
+what each step does and the command to run.
 
-1. **Connections (Module 2)** — build the warehouse's join-path graph:
+In short, you give your coding agent three tools for the library and one map of the
+warehouse. At the end, the agent combines them to answer real questions.
+
+1. **Connections (Module 2):** Build a map of the warehouse.
    ```bash
    python load/build_connections.py
    ```
-   Approve the `connections` MCP in your agent, then ask a warehouse question and
-   watch it retrieve the schema and write Text2SQL (run with
-   `python skill/scripts/run_sql.py "<SQL>"`).
-2. **Trees (Module 3)** — load the documents, then build the navigation tools:
+   - **What it does:** It reads the warehouse's table names, column names, a few example values, and the foreign keys. It writes them to Neo4j as the **connections graph**.
+   - **What it does not do:** It does not copy any rows. The data stays in the warehouse.
+   - **Why it matters:** The foreign keys show how the tables join. The agent uses them to write correct SQL.
+   - **Try it:** Approve the `connections` MCP in your agent. Ask a warehouse question. Watch the agent read the map and write SQL. Run SQL yourself with `python skill/scripts/run_sql.py "<SQL>"`.
+
+2. **Trees (Module 3), load the documents:** Put the PDFs into Neo4j.
    ```bash
    python load/load_documents.py
    ```
-   Fill the `BUILD FROM SPEC` blocks in `skill/scripts/outline.py` and `search.py`
-   (spec: `docs/outline-format.md`).
-3. **Themes (Module 4)** — fill `skill/scripts/themes.py` (spec:
-   `docs/theme-format.md`) and run it; `--gamma` dials theme granularity.
-4. **Finale (Module 6)** — answer the questions that run the shop by combining the
-   shapes. Start your agent and ask, for example:
-   - *"For VIN FAL20T20220002 with code P0301: what fixed this on similar vehicles?"*
-   - *"What are the common patterns across all our bulletins and recalls?"*
-   - *"Which fault codes are failing in the field but have no documentation?"*
+   - **What it does:** It reads the manuals, service bulletins, and recall notices. It builds one **document graph** from them.
+   - **Tree:** Each PDF becomes Library, Folder, Document, then Section. This works like a table of contents.
+   - **Links:** A reference from one document to another becomes a `LINKS_TO` edge.
+   - **Search index:** All the section text goes into one full-text index.
 
-Start your coding agent in the repo root — `skill/SKILL.md` is its playbook.
+3. **Trees (Module 3), build the tools:** Ask your coding agent to write the library tools.
+   - **What to ask:** Tell your agent: "Fill the `BUILD FROM SPEC` blocks in `skill/scripts/outline.py` and `skill/scripts/search.py`. Follow `docs/outline-format.md`."
+   - **What the agent does:** It writes the Cypher queries that are missing from those two files. The spec says what each query must return.
+   - **`outline.py`:** It shows the whole library as a table of contents.
+   - **`search.py`:** It searches the section text.
+   - **Run them:**
+     ```bash
+     python skill/scripts/outline.py
+     python skill/scripts/search.py "<query>"
+     ```
+
+4. **Themes (Module 4):** Ask your coding agent to group the documents.
+   - **What to ask:** Tell your agent: "Fill the `BUILD FROM SPEC` block in `skill/scripts/themes.py`. Follow `docs/theme-format.md`."
+   - **What the script does:** It runs Leiden community detection on the `LINKS_TO` edges. Documents that reference each other land in the same **theme**.
+   - **Run it:**
+     ```bash
+     python skill/scripts/themes.py
+     ```
+   - **`--gamma`:** This sets the theme size. A higher value gives more, smaller themes. A lower value gives fewer, larger themes.
+   - **Requirement:** Themes need the Neo4j Graph Data Science library. A GDS sandbox has it.
+
+5. **Finale (Module 6):** Ask real questions. The agent combines the tools.
+   - **What to do:** Start your agent in the repo root. It reads `skill/SKILL.md` as its playbook.
+   - **What the agent does:** It picks the tool that fits each question. It reads documents with the outline, search, and themes. It reads the warehouse with SQL.
+   - **Example questions:**
+     - *"For VIN FAL20T20220002 with code P0301: what fixed this on similar vehicles?"*
+     - *"What are the common patterns across all our bulletins and recalls?"*
+     - *"Which fault codes are failing in the field but have no documentation?"*
+
+If you get stuck, `solutions/scripts/` has every finished tool.
 
 ## Layout
 
@@ -109,8 +176,7 @@ neo4j-cli query --uri "$NEO4J_URI" --username "$NEO4J_USERNAME" --password "$NEO
   "DROP INDEX content_search IF EXISTS" --rw
 ```
 
-Stuck? `solutions/scripts/` has every completed tool. Themes need GDS (a GDS
-sandbox has it); a crashed themes run cleans up its own projection.
+If a themes run crashes, run it again. It cleans up its own projection first.
 
 ## Swapping in a real lakehouse
 
