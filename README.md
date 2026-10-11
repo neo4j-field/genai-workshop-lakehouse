@@ -95,11 +95,32 @@ The setup script does not install Claude Code on a laptop, so you do these steps
 
 ## The workshop flow
 
+### What you build
+
+You build two graphs in Neo4j. Each one is a map of one half of the lakehouse, and your agent reads each map with different tools.
+
+| | Document graph | Connections graph |
+|---|---|---|
+| **Built by** | `load/load_documents.py` (step 2) | `load/build_connections.py`, which uses neocarta (step 1) |
+| **Map of** | The PDFs: manuals, bulletins, recalls | The warehouse: tables, columns, example values, foreign keys |
+| **Shape** | Tree (Library, Folder, Document, Section), plus `LINKS_TO` edges and themes | Schemas, tables, and columns, plus join paths |
+| **Agent reads it with** | `outline.py`, `search.py`, `themes.py` | The `connections` MCP server |
+| **Then** | The agent reads the documents | The agent writes SQL and runs it with `run_sql.py` |
+
+- **`outline.py`:** It is the table of contents for the documents. It shows the agent what the library holds and gives it URIs to drill into.
+- **neocarta:** It builds the map of the warehouse. The agent reads that map through the `connections` MCP, learns how the tables join, writes the SQL itself, and runs it live against the warehouse.
+
+In the finale (step 5), the agent combines both maps. It uses the document graph to find the part numbers and trouble codes in the right documents. It then uses the connections map to look up those same identifiers in the warehouse tables: vehicles, work orders, and parts.
+
+### The five steps
+
 The workshop has five steps. The GraphAcademy course walks through each one. Here is
 what each step does and the command to run.
 
 In short, you give your coding agent three tools for the library and one map of the
 warehouse. At the end, the agent combines them to answer real questions.
+
+#### Connections graph half (the warehouse)
 
 1. **Connections (Module 2):** Build a map of the warehouse.
    ```bash
@@ -109,6 +130,8 @@ warehouse. At the end, the agent combines them to answer real questions.
    - **What it does not do:** It does not copy any rows. The data stays in the warehouse.
    - **Why it matters:** The foreign keys show how the tables join. The agent uses them to write correct SQL.
    - **Try it:** Approve the `connections` MCP in your agent. Ask a warehouse question. Watch the agent read the map and write SQL. Run SQL yourself with `python skill/scripts/run_sql.py "<SQL>"`.
+
+#### Document graph half (the PDFs)
 
 2. **Trees (Module 3), load the documents:** Put the PDFs into Neo4j.
    ```bash
@@ -120,25 +143,59 @@ warehouse. At the end, the agent combines them to answer real questions.
    - **Search index:** All the section text goes into one full-text index.
 
 3. **Trees (Module 3), build the tools:** Ask your coding agent to write the library tools.
-   - **What to ask:** Tell your agent: "Fill the `BUILD FROM SPEC` blocks in `skill/scripts/outline.py` and `skill/scripts/search.py`. Follow `docs/outline-format.md`."
+   - **The library tools:** Two scripts that let the agent read the document graph.
+     - **`outline.py`:** Shows the whole library as a table of contents (Library, Folder, Document, Section). Names are on the left and full URIs are on the right. `→` rows mark outbound links. Re-run it with a URI to drill into one part.
+     - **`search.py`:** Runs a full-text search over section titles and text. Each hit shows its type, URI, name, a short preview, and a score. `--under` scopes the search to one part of the library.
+   - **What to ask:** Tell your agent:
+     ```text
+     Fill the `BUILD FROM SPEC` blocks in `skill/scripts/outline.py` and `skill/scripts/search.py`. Follow `docs/outline-format.md`.
+     ```
    - **What the agent does:** It writes the Cypher queries that are missing from those two files. The spec says what each query must return.
-   - **`outline.py`:** It shows the whole library as a table of contents.
-   - **`search.py`:** It searches the section text.
    - **Run them:**
      ```bash
      python skill/scripts/outline.py
      python skill/scripts/search.py "<query>"
      ```
+   - **Query examples:** The query is a full-text search over section titles and text. It matches words, not synonyms. It accepts Lucene operators such as `OR`, `AND`, and quoted phrases.
+     ```bash
+     python skill/scripts/search.py "misfire"
+     python skill/scripts/search.py "P0301"
+     python skill/scripts/search.py 'misfire OR "rough idle"'
+     python skill/scripts/search.py 'misfire OR "rough idle"' --under technical-library/bulletins
+     python skill/scripts/search.py "P0301" -k 25
+     ```
+   - **Flags:** `--under <uri-prefix>` limits the search to one part of the library. Take the URI from `outline.py`. `-k N` sets how many hits to return. The default is 10.
 
 4. **Themes (Module 4):** Ask your coding agent to group the documents.
-   - **What to ask:** Tell your agent: "Fill the `BUILD FROM SPEC` block in `skill/scripts/themes.py`. Follow `docs/theme-format.md`."
+   - **The theme tool:** One script that groups the documents by their cross-references and prints the evidence for each group.
+     - **`themes.py`:** Runs Leiden community detection on the `LINKS_TO` edges and prints one evidence block per theme. The agent reads the evidence and names each theme.
+     - **Header:** Reports the totals: documents, grouped, themes, and ungrouped.
+     - **Cohesion:** A word for each theme: tightly, moderately, or loosely interlinked.
+     - **Top shared targets:** The sections and documents that the theme's members cite most in common. The agent uses them to name the theme.
+     - **Most-linked docs:** The member documents with the most links inside the theme, shown as outline rows with full URIs.
+     - **Links into:** One document that crosses over into another theme, so the agent can see how themes connect.
+   - **What to ask:** Tell your agent:
+     ```text
+     Fill the `BUILD FROM SPEC` block in `skill/scripts/themes.py`. Follow `docs/theme-format.md`.
+     ```
    - **What the script does:** It runs Leiden community detection on the `LINKS_TO` edges. Documents that reference each other land in the same **theme**.
    - **Run it:**
      ```bash
      python skill/scripts/themes.py
      ```
-   - **`--gamma`:** This sets the theme size. A higher value gives more, smaller themes. A lower value gives fewer, larger themes.
+   - **`--gamma`:** This sets the theme size. A higher value gives more, smaller themes. A lower value gives fewer, larger themes. The default is `1.0`.
+   - **Gamma example:** Run the script at three values and compare the header line.
+     ```bash
+     python skill/scripts/themes.py --gamma 0.5   # fewer, larger themes
+     python skill/scripts/themes.py               # default, gamma 1.0
+     python skill/scripts/themes.py --gamma 2.0   # more, smaller themes
+     ```
+   - **What to expect:** The header line reports the totals, for example `183 docs · 183 grouped into 13 themes by shared cross-references · 0 ungrouped`. As gamma rises, the theme count rises and each theme holds fewer documents. As gamma falls, themes merge and the count drops. Your exact numbers depend on your corpus and may differ from this example.
+   - **`--min-docs`:** Themes smaller than this value (default `2`) are dropped into the ungrouped count. At a high gamma, small themes appear more often, so the ungrouped number can rise.
+   - **Repeat runs:** The script fixes the random seed, so the same gamma gives the same themes each time. The theme numbers (`T1`, `T2`) come from size order in each run, so refer to themes by document URI.
    - **Requirement:** Themes need the Neo4j Graph Data Science library. A GDS sandbox has it.
+
+#### Both halves together
 
 5. **Finale (Module 6):** Ask real questions. The agent combines the tools.
    - **What to do:** Start your agent in the repo root. It reads `skill/SKILL.md` as its playbook.

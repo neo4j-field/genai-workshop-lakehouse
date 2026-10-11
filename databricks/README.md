@@ -52,8 +52,9 @@ Expect `ok`.
 
 ## Step 2: Set up `.env`
 
-All settings live in `.env`. The Databricks section of `.env.example` lists every
-variable this guide uses.
+All settings live in `.env`. The Databricks section of `.env.example` lists the values
+learners use. The instructor-only values are not in that file. This step tells you which
+ones to add.
 
 ```bash
 cp .env.example .env     # skip this if .env already exists
@@ -62,11 +63,11 @@ cp .env.example .env     # skip this if .env already exists
 Open `.env` and set these values:
 
 - **`WAREHOUSE`:** Set it to `databricks`.
-- **`DATABRICKS_PROFILE`:** The name of your Databricks CLI profile. Run `databricks auth profiles` to list them.
+- **`DATABRICKS_PROFILE`:** The name of your Databricks CLI profile. Add this line yourself, because `.env.example` does not include it. Run `databricks auth profiles` to list your profiles.
 - **`DATABRICKS_SERVER_HOSTNAME`:** The workspace host, for example `dbc-xxxx.cloud.databricks.com`. Write it without `https://`.
 - **`DATABRICKS_HTTP_PATH`:** Set it to `/sql/1.0/warehouses/<warehouse-id>`. Run `databricks warehouses list --profile <your-profile>` to find the warehouse ID.
 - **`DATABRICKS_CATALOG` and `DATABRICKS_SCHEMA`:** The defaults are `lakehouse-workshop` and `autofix_service`. Set other names here, for example `lakehouse-workshop-test`. Every command below reads these two variables, so you change nothing else.
-- **Blank values:** Leave `DATABRICKS_TOKEN`, `DATABRICKS_SP_APP_ID`, `DATABRICKS_SP_ID`, and `DATABRICKS_TOKEN_ID` empty. Later steps fill them in.
+- **Values the scripts fill in:** Leave `DATABRICKS_TOKEN` empty. Step 4 and Step 5 set it. Do not add `DATABRICKS_SP_APP_ID`, `DATABRICKS_SP_ID`, or `DATABRICKS_TOKEN_ID`. The Step 5 script adds them to `.env`.
 
 Then copy every `.env` value into your shell:
 
@@ -141,7 +142,7 @@ The script prints its plan, then runs five steps:
 4. **Token permission:** It gives the principal `CAN_USE` on tokens, so it can own one.
 5. **Token:** It creates a token for the principal and saves it in `.env`. The token expires after `--lifetime` seconds.
 
-The script changes these lines in `.env`:
+The script sets these lines in `.env`. It adds a line that is missing:
 
 - **`DATABRICKS_SP_APP_ID` and `DATABRICKS_SP_ID`:** The IDs of the service principal.
 - **`DATABRICKS_TOKEN`:** The read-only token. It replaces your login token.
@@ -223,7 +224,7 @@ passes, a learner has everything they need.
    - `DATABRICKS_TOKEN`
    - `DATABRICKS_CATALOG` and `DATABRICKS_SCHEMA`, only if you use names other than the defaults
 
-   Leave `GCP_PROJECT_ID` as `.env.example` sets it. Leave `DATABRICKS_PROFILE`, `DATABRICKS_SP_APP_ID`, `DATABRICKS_SP_ID`, and `DATABRICKS_TOKEN_ID` blank. Learners do not receive them.
+   Leave `GCP_PROJECT_ID` as `.env.example` sets it. Do not copy `DATABRICKS_PROFILE`, `DATABRICKS_SP_APP_ID`, `DATABRICKS_SP_ID`, or `DATABRICKS_TOKEN_ID`. Learners do not receive them.
 
 3. Set up the environment and run the checks:
 
@@ -277,7 +278,7 @@ agent then asks Genie about the tables and AI Search about the PDFs.
 - **Workspace features:** Unity Catalog, a running SQL warehouse, **AI Search** with an embedding endpoint such as `databricks-gte-large-en`, **managed MCP** in Public Preview, and a **Genie space**. A served chat model such as `databricks-claude-sonnet-4-5` is also needed.
 - **Extra package:** `pip install databricks-vectorsearch`. `requirements.txt` does not install it. Only `build_doc_index.py` and the teardown need it.
 - **Your own login token:** Run the token line from Step 4 first. It replaces the read-only token in `.env` with your login token. The read-only token cannot create tables or indexes. Part 2 leaves your login token in `.env`. If you do Part 2 after Step 5, run Step 8 and then Step 5 again before Step 7, so `.env` holds a read-only token again.
-- **Optional settings:** `DATABRICKS_VOLUME` (default `pdfs`), `DATABRICKS_VS_ENDPOINT` (default `autofix-search`), and `DATABRICKS_EMBED_ENDPOINT` (default `databricks-gte-large-en`).
+- **Optional settings:** Add these lines to `.env` only to change a default. `.env.example` does not include them. `DATABRICKS_VOLUME` (default `pdfs`), `DATABRICKS_VS_ENDPOINT` (default `autofix-search`), and `DATABRICKS_EMBED_ENDPOINT` (default `databricks-gte-large-en`).
 
 ## Step 9: Upload the PDFs
 
