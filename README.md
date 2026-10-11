@@ -52,7 +52,7 @@ Then add your credentials to `.env` (the setup script copies it from
   values, including a read-only token. Never commit the token. Keep
   `GCP_PROJECT_ID` set, because `load/build_connections.py` reads it on start.
   To provision the warehouse yourself, see
-  [`databricks/`](databricks/README.md#the-connections-path-warehousedatabricks).
+  [`databricks/`](databricks/README.md#part-1-the-main-path-warehousedatabricks).
 - **Anthropic** — set `ANTHROPIC_API_KEY`, or leave it blank to use your Claude
   Code subscription.
 
