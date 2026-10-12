@@ -15,8 +15,8 @@ by giving the agent three reusable graph **shapes**.
 - **Documents** (`corpus/` → rendered to `sources/pdfs/`) are parsed into a Neo4j
   **document graph**: a containment tree (table of contents) plus Leiden **themes**
   (communities over the documents' cross-references).
-- **Warehouse** rows live in **BigQuery** or **Databricks**, picked by `WAREHOUSE`
-  in `.env`, and are never migrated. **neocarta** reads the warehouse's metadata
+- **Warehouse** rows live in **Databricks** (the default) or, optionally,
+  **BigQuery**, picked by `WAREHOUSE` in `.env`, and are never migrated. **neocarta** reads the warehouse's metadata
   plus a few example values per column into a Neo4j **connections** graph. The
   metadata includes the foreign-key join paths. The agent writes Text2SQL
   grounded by those join paths and runs it live.

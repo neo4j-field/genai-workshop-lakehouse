@@ -41,9 +41,9 @@ for s in neo4j-cli neo4j-cypher-skill neo4j-gds-skill; do
 done
 echo ""
 echo "Next steps (from the workshop lesson):"
-echo "  1. Paste your Neo4j sandbox credentials into .env (BigQuery is pre-wired)"
-echo "     On Databricks: set WAREHOUSE=databricks and the DATABRICKS_* values in .env"
-echo "     (your instructor provides the token)"
+echo "  1. Paste your Neo4j sandbox credentials and the DATABRICKS_* values into .env"
+echo "     (your instructor provides the Databricks token)"
+echo "     Optional: set WAREHOUSE=bigquery to use BigQuery instead (it is pre-wired)"
 echo "  2. python load/build_connections.py   (Module 2: connections from the warehouse)"
 echo "  3. python load/load_documents.py                 (Module 3: documents)"
 echo "  4. claude                                    (second terminal)"

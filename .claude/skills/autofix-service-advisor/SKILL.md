@@ -29,7 +29,7 @@ the shape or the warehouse query instead.
 
 Neo4j holds the document graph (trees, themes) and the warehouse's *connections
 metadata* (from neocarta). The warehouse **rows** live in the warehouse
-(BigQuery or Databricks, set by `WAREHOUSE` in `.env`) and are queried with
+(Databricks by default, or BigQuery, set by `WAREHOUSE` in `.env`) and are queried with
 SQL - they are never migrated. Connection from `.env`; ad-hoc Neo4j queries via
 `neo4j-cli query '...'`, ad-hoc warehouse SQL via
 `python skill/scripts/run_sql.py '<SQL>'` (it uses the workshop's read
@@ -112,8 +112,8 @@ The pattern for any warehouse fact:
 4. **Join + reason** over the result, then answer with the evidence and the
    grounding section URIs.
 
-**Which warehouse, and its SQL.** `WAREHOUSE` in `.env` picks BigQuery or
-Databricks, and the two write SQL differently. Before your first query, run
+**Which warehouse, and its SQL.** `WAREHOUSE` in `.env` picks Databricks (the
+default) or BigQuery, and the two write SQL differently. Before your first query, run
 `python skill/scripts/run_sql.py --info` once: it prints the warehouse, its
 dialect, and the table-reference form. Write every query in that dialect and form.
 

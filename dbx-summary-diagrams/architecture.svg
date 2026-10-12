@@ -24,9 +24,9 @@
   <text x="130" y="328" text-anchor="middle" font-size="15" font-weight="bold" fill="#0f172a">Warehouse</text>
   <text x="130" y="348" text-anchor="middle" font-size="12" fill="#334155">picked by WAREHOUSE in .env</text>
   <rect x="40" y="362" width="180" height="38" rx="19" fill="#ffffff" stroke="#0284c7"/>
-  <text x="130" y="386" text-anchor="middle" font-size="14" fill="#0f172a">BigQuery (default)</text>
+  <text x="130" y="386" text-anchor="middle" font-size="14" fill="#0f172a">BigQuery (optional)</text>
   <rect x="40" y="410" width="180" height="38" rx="19" fill="#ffffff" stroke="#dc2626"/>
-  <text x="130" y="434" text-anchor="middle" font-size="14" fill="#0f172a">Databricks (new)</text>
+  <text x="130" y="434" text-anchor="middle" font-size="14" fill="#0f172a">Databricks (default)</text>
 
   <!-- Loaders -->
   <rect x="290" y="90" width="180" height="60" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>

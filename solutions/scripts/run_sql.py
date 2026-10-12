@@ -1,10 +1,10 @@
 r"""Run a warehouse SQL statement using the workshop's auth.
 
 The agent writes Text2SQL grounded by the `connections` MCP schema, then runs it
-here. WAREHOUSE in .env picks the warehouse (default bigquery); warehouse.py
-loads its auth. On BigQuery that is the read-only key in BIGQUERY_SA_KEY_B64 if
-set, otherwise your own gcloud login. Use this rather than the `bq` CLI, which
-does not read the workshop key. On Databricks it is DATABRICKS_TOKEN.
+here. WAREHOUSE in .env picks the warehouse (default databricks); warehouse.py
+loads its auth. On Databricks that is DATABRICKS_TOKEN. On BigQuery it is the
+read-only key in BIGQUERY_SA_KEY_B64 if set, otherwise your own gcloud login.
+Use this rather than the `bq` CLI, which does not read the workshop key.
 
 Run with --info first to see which warehouse answers, its SQL dialect, and how
 to write a table reference. The two warehouses quote names differently:

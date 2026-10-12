@@ -12,7 +12,7 @@
   <rect x="20" y="170" width="150" height="90" rx="10" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
   <text x="95" y="200" text-anchor="middle" font-size="15" font-weight="bold" fill="#0f172a">.env</text>
   <text x="95" y="224" text-anchor="middle" font-size="13" fill="#334155">WAREHOUSE=</text>
-  <text x="95" y="244" text-anchor="middle" font-size="13" fill="#334155">bigquery | databricks</text>
+  <text x="95" y="244" text-anchor="middle" font-size="13" fill="#334155">databricks | bigquery</text>
 
   <!-- Query time lane -->
   <text x="240" y="70" font-size="13" fill="#64748b">QUERY TIME: the agent asks for rows</text>
@@ -65,5 +65,5 @@
   <path d="M170,200 C200,200 200,120 226,120" fill="none" stroke="#ca8a04" stroke-width="2" marker-end="url(#arrow)"/>
   <path d="M170,235 C200,235 200,325 226,325" fill="none" stroke="#ca8a04" stroke-width="2" marker-end="url(#arrow)"/>
 
-  <text x="480" y="420" text-anchor="middle" font-size="12" fill="#64748b">Only the chosen side loads. A BigQuery learner needs no Databricks settings.</text>
+  <text x="480" y="420" text-anchor="middle" font-size="12" fill="#64748b">Only the chosen side loads. A Databricks learner needs no GCP settings.</text>
 </svg>

@@ -12,8 +12,8 @@ The data comes in two halves that share keys (part numbers, trouble codes):
 
 - **Documents** — repair manuals, service bulletins, and recall notices (PDFs),
   parsed into a Neo4j **document graph** (a navigable tree plus Leiden themes).
-- **Warehouse** — vehicles, work orders, and parts in **BigQuery** by default, or
-  in **Databricks**. The rows stay in the warehouse. **neocarta** reads their
+- **Warehouse** — vehicles, work orders, and parts in **Databricks** by default,
+  or optionally in **BigQuery**. The rows stay in the warehouse. **neocarta** reads their
   metadata plus a few example values per column into a Neo4j **connections**
   graph. The metadata includes the foreign-key join paths, and the agent
   federates across the two halves.
@@ -43,16 +43,16 @@ Then add your credentials to `.env` (the setup script copies it from
 - **Neo4j** — a sandbox with the Graph Data Science library (a
   [GDS blank sandbox](https://sandbox.neo4j.com) works). Paste `NEO4J_URI`,
   `NEO4J_USERNAME`, `NEO4J_PASSWORD`, `NEO4J_DATABASE`.
-- **BigQuery** — the workshop dataset is read-only; use the one-line
-  `BIGQUERY_SA_KEY_B64` from the workshop, or use your own `gcloud` login. To
-  provision your own copy of the warehouse, see [`bigquery/`](bigquery/).
-- **Databricks** — to use Databricks instead of BigQuery, set
-  `WAREHOUSE=databricks` and fill in `DATABRICKS_SERVER_HOSTNAME`,
-  `DATABRICKS_HTTP_PATH`, and `DATABRICKS_TOKEN`. Your instructor provides these
-  values, including a read-only token. Never commit the token. Keep
-  `GCP_PROJECT_ID` set, because `load/build_connections.py` reads it on start.
-  To provision the warehouse yourself, see
+- **Databricks** — the default warehouse (`WAREHOUSE=databricks`). Fill in
+  `DATABRICKS_SERVER_HOSTNAME`, `DATABRICKS_HTTP_PATH`, and `DATABRICKS_TOKEN`.
+  Your instructor provides these values, including a read-only token. Never
+  commit the token. To provision the warehouse yourself, see
   [`databricks/`](databricks/README.md#part-1-the-main-path-warehousedatabricks).
+- **BigQuery (optional)** — to use BigQuery instead of Databricks, set
+  `WAREHOUSE=bigquery`. The workshop dataset is read-only and pre-wired in
+  `.env.example`. Use the one-line `BIGQUERY_SA_KEY_B64` from the workshop, or
+  use your own `gcloud` login. To provision your own copy of the warehouse, see
+  [`bigquery/`](bigquery/).
 - **Anthropic** — set `ANTHROPIC_API_KEY`, or leave it blank to use your Claude
   Code subscription.
 
@@ -73,7 +73,7 @@ The setup runs for you. `.devcontainer/post-create.sh` does this when the Codesp
 - **Neo4j CLI and skills:** It installs `neo4j-cli`, `neo4j-cypher-skill`, and `neo4j-gds-skill`. The agent uses them in steps 3 and 4 of the workshop flow.
 - **Environment file:** It copies `.env.example` to `.env`. It also loads `.env` into every new terminal.
 
-You add your Neo4j values to `.env`, run step 1 of the workshop flow, and start the agent with `claude` in a second terminal. Approve the `connections` server when Claude Code asks.
+You add your Neo4j and Databricks values to `.env`, run step 1 of the workshop flow, and start the agent with `claude` in a second terminal. Approve the `connections` server when Claude Code asks.
 
 ### On your laptop
 
@@ -84,7 +84,7 @@ The setup script does not install Claude Code on a laptop, so you do these steps
    npm install -g @anthropic-ai/claude-code
    ```
 2. **Run the setup script** from the Quick start above, if you have not already. It makes `.venv`, installs `requirements.txt` with `neocarta-mcp`, installs the Neo4j CLI and its skills, and creates `.env`.
-3. **Fill in `.env`.** Add `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, and `NEO4J_DATABASE`. The `connections` server reads them from this file.
+3. **Fill in `.env`.** Add `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, and `NEO4J_DATABASE`. The `connections` server reads them from this file. Also add the `DATABRICKS_*` values from your instructor, or set `WAREHOUSE=bigquery` to use BigQuery.
 4. **Build the connections graph.** Run step 1 of the workshop flow below. The server has nothing to serve until this graph exists.
 5. **Start the agent** from the repo root:
    ```bash
@@ -213,13 +213,13 @@ If you get stuck, `solutions/scripts/` has every finished tool.
 |---|---|
 | `corpus/` | The document half as authored markdown (`<area>/<id>.md`), the source of truth |
 | `sources/pdfs/` | The corpus rendered to PDFs (manuals, bulletins, recalls) — what the loader parses |
-| `sources/warehouse/` | CSV exports of the warehouse tables `autofix.service.*`, which load both BigQuery and Databricks |
+| `sources/warehouse/` | CSV exports of the warehouse tables `autofix.service.*`, which load both Databricks and BigQuery |
 | `load/` | The pipelines: `build_connections.py` (warehouse metadata graph) and `load_documents.py` (document graph) |
 | `skill/` | **What you build** — the service-advisor skill: `SKILL.md` playbook + `scripts/` tools |
 | `solutions/` | Complete scripts — catch up or compare |
 | `docs/` | The shape specs (`outline-format.md`, `theme-format.md`) you build against |
-| `bigquery/` | Provision your own copy of the AutoFix warehouse in BigQuery |
 | `databricks/` | Provision the AutoFix warehouse in Databricks, plus an optional Genie + AI Search path |
+| `bigquery/` | Optional: provision your own copy of the AutoFix warehouse in BigQuery |
 | `tools/` | Authoring tools: `render_corpus.py` (markdown → PDFs), `generate_warehouse.py` (warehouse CSVs) |
 
 ## Running it locally

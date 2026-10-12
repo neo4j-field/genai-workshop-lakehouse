@@ -3,13 +3,13 @@
 This guide is for the **instructor or workshop admin**. Learners do not follow it.
 Learners receive three values from you and paste them into their own `.env`.
 
-The workshop's default backend is BigQuery plus Neo4j. This guide stands the same
-AutoFix data up on Databricks instead. Part 1 is the main path. Part 2 is optional.
+The workshop's default backend is Databricks plus Neo4j. This guide stands the
+AutoFix data up on Databricks. Part 1 is the main path. Part 2 is optional.
 
 ## Overview
 
 - **Who uses this guide:** The instructor or admin. You need rights to create a catalog, grant access, and create a service principal in the workspace.
-- **What learners get:** The workspace host, the SQL warehouse HTTP path, and a read-only token. Learners also set `WAREHOUSE=databricks`.
+- **What learners get:** The workspace host, the SQL warehouse HTTP path, and a read-only token. `.env.example` already sets `WAREHOUSE=databricks`, the default.
 - **Part 1, main path:** You load six warehouse tables and hand out read-only access. Learners build the connections graph and query the rows live. Most workshops need only this part.
 - **Part 2, optional path:** You expose the data to a coding agent through Databricks managed MCP. **Genie** answers questions over the tables. **AI Search** searches the document PDFs. This part bills while it runs.
 - **Unity Catalog:** The Databricks system that holds catalogs, schemas, and tables, and controls who can read them.
@@ -194,7 +194,6 @@ DATABRICKS_HTTP_PATH=<http-path>
 DATABRICKS_TOKEN=<token>
 ```
 
-- **Keep `GCP_PROJECT_ID`:** Learners leave it set in `.env`. `build_connections.py` reads it on start, even on Databricks.
 - **Catalog and schema:** `.env.example` already sets both to the workshop defaults. If you use other names, add `DATABRICKS_CATALOG` and `DATABRICKS_SCHEMA` to the values you hand out.
 - **Query tag:** Every learner query carries the tag `neo4j-genai-workshop-lakehouse`. Search for it in the warehouse query history.
 
@@ -224,7 +223,7 @@ passes, a learner has everything they need.
    - `DATABRICKS_TOKEN`
    - `DATABRICKS_CATALOG` and `DATABRICKS_SCHEMA`, only if you use names other than the defaults
 
-   Leave `GCP_PROJECT_ID` as `.env.example` sets it. Do not copy `DATABRICKS_PROFILE`, `DATABRICKS_SP_APP_ID`, `DATABRICKS_SP_ID`, or `DATABRICKS_TOKEN_ID`. Learners do not receive them.
+   Do not copy `DATABRICKS_PROFILE`, `DATABRICKS_SP_APP_ID`, `DATABRICKS_SP_ID`, or `DATABRICKS_TOKEN_ID`. Learners do not receive them.
 
 3. Set up the environment and run the checks:
 
