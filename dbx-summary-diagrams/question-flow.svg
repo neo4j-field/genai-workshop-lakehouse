@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 640" width="860" height="640" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="860" height="640" fill="#ffffff"/>
+
+  <text x="430" y="30" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">How the agent answers one question</text>
+
+  <!-- Legend -->
+  <rect x="640" y="50" width="14" height="14" fill="#ecfdf5" stroke="#059669"/>
+  <text x="662" y="62" font-size="12" fill="#334155">reads Neo4j</text>
+  <rect x="640" y="72" width="14" height="14" fill="#e0f2fe" stroke="#0284c7"/>
+  <text x="662" y="84" font-size="12" fill="#334155">reads the warehouse</text>
+
+  <!-- Step 1 -->
+  <rect x="80" y="50" width="520" height="62" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="100" y="76" font-size="14" font-weight="bold" fill="#0f172a">1. Question</text>
+  <text x="100" y="98" font-size="13" fill="#334155">"What fixed P0301 on vehicles like FAL20T20190053?"</text>
+
+  <!-- Step 2 -->
+  <rect x="80" y="140" width="520" height="62" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+  <text x="100" y="166" font-size="14" font-weight="bold" fill="#0f172a">2. Search the documents: search.py "P0301"</text>
+  <text x="100" y="188" font-size="13" fill="#334155">The matching sections name the candidate part numbers.</text>
+
+  <!-- Step 3 -->
+  <rect x="80" y="230" width="520" height="62" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+  <text x="100" y="256" font-size="14" font-weight="bold" fill="#0f172a">3. Get the join paths: connections MCP</text>
+  <text x="100" y="278" font-size="13" fill="#334155">The graph says work_orders joins vehicles and parts.</text>
+
+  <!-- Step 4 -->
+  <rect x="80" y="320" width="520" height="62" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+  <text x="100" y="346" font-size="14" font-weight="bold" fill="#0f172a">4. Learn the dialect: run_sql.py --info</text>
+  <text x="100" y="368" font-size="13" fill="#334155">It prints the warehouse, its SQL, and how to write a table name.</text>
+
+  <!-- Step 5 -->
+  <rect x="80" y="410" width="520" height="62" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+  <text x="100" y="436" font-size="14" font-weight="bold" fill="#0f172a">5. Count real outcomes: run_sql.py "SELECT ..."</text>
+  <text x="100" y="458" font-size="13" fill="#334155">Work orders and comebacks per part on Falcon 2.0T vehicles.</text>
+
+  <!-- Step 6 -->
+  <rect x="80" y="500" width="520" height="62" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="100" y="526" font-size="14" font-weight="bold" fill="#0f172a">6. Answer</text>
+  <text x="100" y="548" font-size="13" fill="#334155">Rank by fewest comebacks. Cite the document sections.</text>
+
+  <!-- Arrows -->
+  <line x1="340" y1="112" x2="340" y2="136" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="340" y1="202" x2="340" y2="226" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="340" y1="292" x2="340" y2="316" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="340" y1="382" x2="340" y2="406" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="340" y1="472" x2="340" y2="496" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Dialect side note -->
+  <rect x="630" y="330" width="210" height="150" rx="10" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+  <text x="735" y="354" text-anchor="middle" font-size="13" font-weight="bold" fill="#0f172a">The SQL that differs</text>
+  <text x="645" y="378" font-size="12" fill="#334155">BigQuery:</text>
+  <text x="645" y="396" font-size="12" fill="#334155">`project.dataset.table`</text>
+  <text x="645" y="412" font-size="12" fill="#334155">COUNTIF(comeback)</text>
+  <text x="645" y="432" font-size="12" fill="#334155">Databricks:</text>
+  <text x="645" y="450" font-size="12" fill="#334155">`catalog`.`schema`.`table`</text>
+  <line x1="630" y1="400" x2="604" y2="400" stroke="#ea580c" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="645" y="468" font-size="12" fill="#334155">count_if(comeback)</text>
+
+  <text x="430" y="600" text-anchor="middle" font-size="12" fill="#64748b">Steps 2 and 3 use Neo4j. Steps 4 and 5 use the warehouse. The part numbers join the two.</text>
+</svg>

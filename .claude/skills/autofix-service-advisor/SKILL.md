@@ -28,11 +28,12 @@ the shape or the warehouse query instead.
 ## The graph
 
 Neo4j holds the document graph (trees, themes) and the warehouse's *connections
-metadata* (from neocarta). The warehouse **rows** live in BigQuery and are
-queried with SQL - they are never migrated. Connection from `.env`; ad-hoc Neo4j
-queries via `neo4j-cli query '...'`, ad-hoc BigQuery via
-`python skill/scripts/run_sql.py '<SQL>'` (it uses the workshop's read key; the
-`bq` CLI only works if you have your own gcloud login).
+metadata* (from neocarta). The warehouse **rows** live in the warehouse
+(Databricks by default, or BigQuery, set by `WAREHOUSE` in `.env`) and are queried with
+SQL - they are never migrated. Connection from `.env`; ad-hoc Neo4j queries via
+`neo4j-cli query '...'`, ad-hoc warehouse SQL via
+`python skill/scripts/run_sql.py '<SQL>'` (it uses the workshop's read
+credentials; the `bq` CLI only works if you have your own gcloud login).
 
 **How you query the warehouse (Text2SQL, grounded by the connections graph).**
 The `connections` MCP server (neocarta) exposes the metadata graph as tools -
@@ -60,12 +61,12 @@ the SQL from them.
   - `Document.id` is the document's slug (`tsb-21-114`, `rc-2021-04`); recall
     notices are Documents in the `recalls/` folder. `Document.themeId` is set by
     themes.py and is only stable within one run
-- Connections — the warehouse's *metadata* (built by neocarta from BigQuery; the
-  rows themselves stay in BigQuery and are queried with SQL):
+- Connections — the warehouse's *metadata* (built by neocarta from the warehouse;
+  the rows themselves stay in the warehouse and are queried with SQL):
   `(:Database)-[:HAS_SCHEMA]->(:Schema)-[:HAS_TABLE]->(:Table)-[:HAS_COLUMN]->(:Column)`,
   `(:Column)-[:REFERENCES]->(:Column)` per foreign key (the join paths),
   `(:Column)-[:HAS_VALUE]->(:Value)` sample values. Read this to know how to join
-  warehouse tables; query the live rows with BigQuery SQL.
+  warehouse tables; query the live rows with the warehouse's SQL.
   `work_orders.comeback = true` in the rows means the vehicle returned with the
   same problem.
 
@@ -111,14 +112,25 @@ The pattern for any warehouse fact:
 4. **Join + reason** over the result, then answer with the evidence and the
    grounding section URIs.
 
+**Which warehouse, and its SQL.** `WAREHOUSE` in `.env` picks Databricks (the
+default) or BigQuery, and the two write SQL differently. Before your first query, run
+`python skill/scripts/run_sql.py --info` once: it prints the warehouse, its
+dialect, and the table-reference form. Write every query in that dialect and form.
+
+| | BigQuery (GoogleSQL) | Databricks (Databricks SQL) |
+| --- | --- | --- |
+| Table reference | `` `PROJECT.DATASET.vehicles` ``, one backtick pair | `` `CATALOG`.`SCHEMA`.`vehicles` ``, each part quoted (the catalog name has a hyphen) |
+| Count rows where a boolean is true | `COUNTIF(comeback)` | `count_if(comeback)`. `COUNTIF` and `countif` fail on Databricks |
+
 **Evidence-ranked fix** - "what fixed `<code>` on vehicles like `<vin>`?"
 
 - Neo4j: full-text the `<code>` -> the sections that mention it; read the part
   numbers from that prose. Those are the candidate parts, each with its guidance
   (the owning document titles) and grounding section URIs.
-- BigQuery: the vin's model and engine; then for those candidate parts, on
+- Warehouse: the vin's model and engine; then for those candidate parts, on
   same-model+engine vehicles whose work orders are diagnosed with `<code>`,
   `COUNT(DISTINCT wo_id) AS timesUsed` and `COUNTIF(comeback) AS comebacks`
+  (`count_if(comeback)` on Databricks)
   (join `work_orders -> vehicles -> work_order_parts -> parts`, per the FK refs).
 - Rank: keep only parts with real outcomes, attach guidance and grounding, sort
   by comebacks ascending then timesUsed descending. The first is the
@@ -180,7 +192,7 @@ they share. Do not stop at the half the question happens to name first.
 2. **Evidence beats guidance.** When documents disagree (a manual predates a
    bulletin), rank by real outcomes from the warehouse: zero comebacks wins.
    Cite the newer document.
-3. **Prefer the current part.** Supersession lives in BigQuery
+3. **Prefer the current part.** Supersession lives in the warehouse
    (`parts.superseded_by`); when a part you would name has been superseded,
    surface the replacement instead and say so.
 4. **Cover the whole set; prove the negative.** For "across all" questions, use

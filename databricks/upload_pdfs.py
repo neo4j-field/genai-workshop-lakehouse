@@ -9,7 +9,7 @@ Env (a .env is loaded if present; same vars as load_databricks.py):
   DATABRICKS_SERVER_HOSTNAME   e.g. dbc-xxxx.cloud.databricks.com  (no https://)
   DATABRICKS_HTTP_PATH         e.g. /sql/1.0/warehouses/abc123
   DATABRICKS_TOKEN             a PAT (dapi...) or OAuth token
-  DATABRICKS_CATALOG           default: autofix
+  DATABRICKS_CATALOG           default: lakehouse-workshop
   DATABRICKS_SCHEMA            default: autofix_service
   DATABRICKS_VOLUME            default: pdfs
 
@@ -29,9 +29,9 @@ load_dotenv(override=True)
 HOST = os.environ["DATABRICKS_SERVER_HOSTNAME"]
 HTTP_PATH = os.environ["DATABRICKS_HTTP_PATH"]
 TOKEN = os.environ["DATABRICKS_TOKEN"]
-CATALOG = os.environ.get("DATABRICKS_CATALOG", "autofix")
-SCHEMA = os.environ.get("DATABRICKS_SCHEMA", "autofix_service")
-VOLUME = os.environ.get("DATABRICKS_VOLUME", "pdfs")
+CATALOG = os.environ.get("DATABRICKS_CATALOG") or "lakehouse-workshop"
+SCHEMA = os.environ.get("DATABRICKS_SCHEMA") or "autofix_service"
+VOLUME = os.environ.get("DATABRICKS_VOLUME") or "pdfs"
 
 PDF_DIR = Path(__file__).resolve().parent.parent / "sources" / "pdfs"
 VOL_PATH = f"/Volumes/{CATALOG}/{SCHEMA}/{VOLUME}"

@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" width="960" height="440" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="960" height="440" fill="#ffffff"/>
+
+  <text x="480" y="30" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">One switch picks the warehouse</text>
+
+  <!-- .env switch -->
+  <rect x="20" y="170" width="150" height="90" rx="10" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+  <text x="95" y="200" text-anchor="middle" font-size="15" font-weight="bold" fill="#0f172a">.env</text>
+  <text x="95" y="224" text-anchor="middle" font-size="13" fill="#334155">WAREHOUSE=</text>
+  <text x="95" y="244" text-anchor="middle" font-size="13" fill="#334155">databricks | bigquery</text>
+
+  <!-- Query time lane -->
+  <text x="240" y="70" font-size="13" fill="#64748b">QUERY TIME: the agent asks for rows</text>
+  <rect x="230" y="85" width="170" height="70" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+  <text x="315" y="114" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">run_sql.py</text>
+  <text x="315" y="136" text-anchor="middle" font-size="13" fill="#334155">path_query.py</text>
+
+  <rect x="450" y="85" width="150" height="70" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="525" y="114" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">warehouse.py</text>
+  <text x="525" y="136" text-anchor="middle" font-size="12" fill="#334155">query() and table()</text>
+
+  <rect x="650" y="70" width="110" height="40" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="2"/>
+  <text x="705" y="95" text-anchor="middle" font-size="14" fill="#0f172a">bq.py</text>
+  <rect x="650" y="130" width="110" height="40" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="2"/>
+  <text x="705" y="155" text-anchor="middle" font-size="14" fill="#0f172a">dbx.py (new)</text>
+
+  <rect x="800" y="70" width="140" height="40" rx="8" fill="#e0f2fe" stroke="#0284c7"/>
+  <text x="870" y="95" text-anchor="middle" font-size="13" fill="#0f172a">BigQuery</text>
+  <rect x="800" y="130" width="140" height="40" rx="8" fill="#fee2e2" stroke="#dc2626"/>
+  <text x="870" y="155" text-anchor="middle" font-size="13" fill="#0f172a">Databricks SQL</text>
+
+  <line x1="400" y1="120" x2="446" y2="120" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="600" y1="110" x2="646" y2="92" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="600" y1="130" x2="646" y2="148" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="760" y1="90" x2="796" y2="90" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="760" y1="150" x2="796" y2="150" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Build time lane -->
+  <text x="240" y="390" font-size="13" fill="#64748b">BUILD TIME: neocarta copies the metadata</text>
+  <rect x="230" y="290" width="170" height="70" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+  <text x="315" y="320" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">build_connections.py</text>
+  <text x="315" y="342" text-anchor="middle" font-size="12" fill="#334155">one script, two branches</text>
+
+  <rect x="450" y="275" width="200" height="40" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="2"/>
+  <text x="550" y="300" text-anchor="middle" font-size="13" fill="#0f172a">BigQuerySchemaConnector</text>
+  <rect x="450" y="335" width="200" height="40" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="2"/>
+  <text x="550" y="360" text-anchor="middle" font-size="13" fill="#0f172a">DatabricksSchemaConnector</text>
+
+  <rect x="700" y="285" width="240" height="80" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+  <text x="820" y="313" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">Same connections graph</text>
+  <text x="820" y="335" text-anchor="middle" font-size="12" fill="#334155">6 tables, 24 columns</text>
+  <text x="820" y="353" text-anchor="middle" font-size="12" fill="#334155">5 join paths, example values</text>
+
+  <line x1="400" y1="315" x2="446" y2="298" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="400" y1="335" x2="446" y2="352" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="650" y1="295" x2="696" y2="315" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="650" y1="355" x2="696" y2="338" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Switch feeds both lanes -->
+  <path d="M170,200 C200,200 200,120 226,120" fill="none" stroke="#ca8a04" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M170,235 C200,235 200,325 226,325" fill="none" stroke="#ca8a04" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <text x="480" y="420" text-anchor="middle" font-size="12" fill="#64748b">Only the chosen side loads. A Databricks learner needs no GCP settings.</text>
+</svg>

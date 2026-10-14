@@ -1,5 +1,8 @@
 # AutoFix warehouse in BigQuery
 
+BigQuery is optional. The workshop uses Databricks by default. To use BigQuery
+instead, set `WAREHOUSE=bigquery` in `.env`.
+
 The warehouse half of the lakehouse lives here — **in BigQuery, never migrated
 into Neo4j**. neocarta reads its *metadata* (the foreign-key join paths) to build
 the connections shape; the finale federates against the live rows. This folder
